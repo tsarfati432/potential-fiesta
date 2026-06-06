@@ -23,25 +23,25 @@ module.exports = {
   async execute(interaction) {
     const embed = new EmbedBuilder()
       .setColor("#1E1F22")
-      .setTitle("0xSpammer - Ticket Panel")
+      .setTitle("0xSpammer - פאנל כרטיסי תמיכה")
       .setDescription(
-        "Please select the category below that best matches your request to open a secure ticket.",
+        "אנא בחר את הקטגוריה המתאימה ביותר לפנייה שלך מהתפריט למטה כדי לפתוח כרטיס תמיכה מאובטח.",
       )
       .setThumbnail(interaction.guild.iconURL({ dynamic: true }));
 
     const menu = new StringSelectMenuBuilder()
       .setCustomId("ticket_category_select")
-      .setPlaceholder("Choose a ticket category...")
+      .setPlaceholder("בחר קטגוריית כרטיס...")
       .addOptions([
         {
-          label: "Buying",
-          description: "Open a ticket to purchase products or services",
+          label: "קנייה",
+          description: "פתח כרטיס כדי לרכוש מוצרים או שירותים",
           value: "buying_ticket",
           emoji: "🛒",
         },
         {
-          label: "General Question",
-          description: "Open a ticket for general inquiries or support",
+          label: "שאלה כללית",
+          description: "פתח כרטיס עבור שאלות כלליות, בירורים או תמיכה",
           value: "general_ticket",
           emoji: "❓",
         },
@@ -50,7 +50,7 @@ module.exports = {
     const row = new ActionRowBuilder().addComponents(menu);
 
     await interaction.reply({
-      content: "✅ Ticket system dashboard deployed!",
+      content: "✅ מערכת הכרטיסים הופעלה בהצלחה!",
       flags: [MessageFlags.Ephemeral],
     });
     await interaction.channel.send({ embeds: [embed], components: [row] });
@@ -75,7 +75,7 @@ module.exports = {
 
     if (existingTicket) {
       return interaction.editReply({
-        content: `❌ You already have an active support ticket open: ${existingTicket}`,
+        content: `❌ כבר יש לך כרטיס תמיכה פעיל פתוח בשרת: ${existingTicket}`,
       });
     }
 
@@ -112,35 +112,33 @@ module.exports = {
       });
 
       const displayCategory =
-        chosenCategory === "buying_ticket"
-          ? "🛒 Buying"
-          : "❓ General Question";
+        chosenCategory === "buying_ticket" ? "🛒 קנייה" : "❓ שאלה כללית";
 
       const infoEmbed = new EmbedBuilder()
         .setColor("#1E1F22")
-        .setTitle("🔒 Private Support Ticket")
+        .setTitle("🔒 כרטיס תמיכה פרטי")
         .setDescription(
-          `Welcome ${member.user}!\n\nPlease describe your request in detail. A staff member will assist you shortly.`,
+          `ברוך הבא ${member.user}!\n\nאנא תאר את פנייתך בפירוט. חבר צוות יתפנה לסייע לך בהקדם האפשרי.`,
         )
         .addFields(
-          { name: "👤 Creator", value: `${member.user}`, inline: true },
+          { name: "👤 יוצר הכרטיס", value: `${member.user}`, inline: true },
           {
-            name: "📂 Category",
+            name: "📂 קטגוריה",
             value: `\`${displayCategory}\``,
             inline: true,
           },
-          { name: "📌 Status", value: "`Waiting for Staff...`", inline: true },
+          { name: "📌 סטטוס", value: "`ממתין למענה צוות...`", inline: true },
         );
 
       const actionRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("claim_ticket_btn")
-          .setLabel("Claim Ticket")
+          .setLabel("תביעת בעלות על הכרטיס")
           .setStyle(ButtonStyle.Success)
           .setEmoji("📌"),
         new ButtonBuilder()
           .setCustomId("close_ticket_btn")
-          .setLabel("Close")
+          .setLabel("סגור כרטיס")
           .setStyle(ButtonStyle.Danger)
           .setEmoji("🔒"),
       );
@@ -152,13 +150,12 @@ module.exports = {
       });
 
       return interaction.editReply({
-        content: `✅ Ticket created successfully! Go to ${ticketChannel}`,
+        content: `✅ הכרטיס נוצר בהצלחה! עבר אל: ${ticketChannel}`,
       });
     } catch (error) {
       console.error(error);
       return interaction.editReply({
-        content:
-          "❌ Failed to create your ticket channel. Check bot permissions.",
+        content: "❌ יצירת ערוץ הכרטיס נכשלה. אנא בדוק את הרשאות הבוט.",
       });
     }
   },
@@ -173,7 +170,7 @@ module.exports = {
     if (customId === "claim_ticket_btn") {
       if (!member.roles.cache.has(staffRoleId)) {
         return interaction.reply({
-          content: "❌ Only support staff can claim tickets.",
+          content: "❌ רק צוות התמיכה יכול לקחת בעלות על כרטיסים.",
           flags: [MessageFlags.Ephemeral],
         });
       }
@@ -182,21 +179,21 @@ module.exports = {
       const updatedEmbed = EmbedBuilder.from(receivedEmbed)
         .setColor("#23A55A")
         .spliceFields(2, 1, {
-          name: "📌 Status",
-          value: `\`Claimed by ${member.user.username}\``,
+          name: "📌 סטטוס",
+          value: `\`בטיפול על ידי ${member.user.username}\``,
           inline: true,
         });
 
       const updatedRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("claim_ticket_btn")
-          .setLabel("Claimed")
+          .setLabel("בטיפול")
           .setStyle(ButtonStyle.Success)
           .setDisabled(true)
           .setEmoji("✅"),
         new ButtonBuilder()
           .setCustomId("close_ticket_btn")
-          .setLabel("Close")
+          .setLabel("סגור כרטיס")
           .setStyle(ButtonStyle.Danger)
           .setEmoji("🔒"),
       );
@@ -216,7 +213,7 @@ module.exports = {
           components: [updatedRow],
         });
         return interaction.followUp({
-          content: `📌 ${member.user} has claimed this ticket.`,
+          content: `📌 ${member.user} לקח בעלות על כרטיס זה ומטפל בפנייה.`,
         });
       } catch (error) {
         console.error(error);
@@ -244,22 +241,22 @@ module.exports = {
 
       const staffControlEmbed = new EmbedBuilder()
         .setColor("#F23F43")
-        .setTitle("🛠️ Staff Control Panel")
+        .setTitle("🛠️ פאנל שליטה לצוות")
         .setDescription(
-          "The ticket creator has been removed from this channel.\n\nReview transcripts or sync logs, then click below to permanently clear the layout.",
+          "יוצר הכרטיס הוסר מערוץ זה.\n\nבאפשרותך לבדוק את היסטוריית ההודעות, ולאחר מכן ללחוץ על הכפתור למטה כדי למחוק את הערוץ לצמיתות.",
         );
 
       const deleteRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("delete_ticket_btn")
-          .setLabel("Delete Ticket")
+          .setLabel("מחק כרטיס")
           .setStyle(ButtonStyle.Danger)
           .setEmoji("🗑️"),
       );
 
       await message.delete().catch(() => {});
       return interaction.editReply({
-        content: "🔒 **Ticket Closed.** Creator permissions revoked.",
+        content: "🔒 **הכרטיס נסגר.** הרשאות המשתמש הוסרו מהערוץ.",
         embeds: [staffControlEmbed],
         components: [deleteRow],
       });
@@ -268,8 +265,7 @@ module.exports = {
     if (customId === "delete_ticket_btn") {
       if (!member.roles.cache.has(staffRoleId)) {
         return interaction.reply({
-          content:
-            "❌ Only support staff can permanently delete closed tickets.",
+          content: "❌ רק צוות התמיכה מורשה למחוק כרטיסים סגורים.",
           flags: [MessageFlags.Ephemeral],
         });
       }
@@ -279,7 +275,7 @@ module.exports = {
 
       await interaction.reply({
         content:
-          "⚠️ **Compiling transcript and deleting channel permanently in 5 seconds...**",
+          "⚠️ **מפיק קובץ תיעוד (Transcript) ומוחק את הערוץ לצמיתות בעוד 5 שניות...**",
       });
 
       try {
@@ -314,9 +310,9 @@ module.exports = {
         if (transcriptLogChannel) {
           const logEmbed = new EmbedBuilder()
             .setColor("#2B2D31")
-            .setTitle("📁 Ticket Transcript Logged")
+            .setTitle("📁 תמלול כרטיס תמיכה נשמר")
             .setDescription(
-              `**Channel Name:** \`${cachedChannelName}\`\n**Closed By:** ${member.user}`,
+              `**שם הערוץ:** \`${cachedChannelName}\`\n**נסגר על ידי:** ${member.user}`,
             )
             .setTimestamp();
 
