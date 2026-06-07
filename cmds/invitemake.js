@@ -17,28 +17,19 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages),
 
   async execute(interaction) {
-    // Strict admin/staff role check to deploy the panel
     if (!interaction.member.roles.cache.has(ALLOWED_ROLE_ID)) {
       return interaction.reply({
-        content:
-          "❌ You do not have permission to deploy this administration panel.",
+        content: "❌ No permission.",
         flags: [MessageFlags.Ephemeral],
       });
     }
 
     const embed = new EmbedBuilder()
       .setColor("#1E1F22")
-      .setTitle("🔗 Personal Invite Generator")
+      .setTitle("🔗 Get Your Personal Invite Link")
       .setDescription(
-        "Welcome to the server access panel.\n\nClick the button below to generate your own unique, trackable invite link instantly.",
-      )
-      .addFields({
-        name: "System Status",
-        value: "`Operational`",
-        inline: true,
-      })
-      .setFooter({ text: "0xSpammer • Internal Tools" })
-      .setTimestamp();
+        "Click the button below to retrieve your personal trackable invite link.",
+      );
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -49,7 +40,7 @@ module.exports = {
     );
 
     await interaction.reply({
-      content: "✅ Invite retrieval panel successfully deployed!",
+      content: "✅ Deployed.",
       flags: [MessageFlags.Ephemeral],
     });
 
@@ -57,37 +48,40 @@ module.exports = {
   },
 
   async handleButton(interaction) {
-    const { customId, guild, member, channel } = interaction;
+    const { customId, guild, member } = interaction;
 
     if (customId === "receive_invite_btn") {
-      // Defer right away so it never expires during generation lag
       await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
       try {
-        // We drop the broken find loop and generate a brand NEW user-bound link every time
-        const userInvite = await channel.createInvite({
-          maxAge: 0, // Never expires
-          maxUses: 0, // Infinite uses
-          unique: true, // CRITICAL: Binds this link directly to the clicking user's account for tracking
-          reason: `Trackable invite generated via panel button by: ${interaction.user.tag}`,
-        });
+        // Fetch all active invites on the server directly from Discord
+        const allInvites = await guild.invites.fetch();
 
-        if (!userInvite) {
+        // Look for a link where the creator matches the user who clicked
+        const userInvite = allInvites.find(
+          (inv) => inv.inviter && inv.inviter.id === member.id,
+        );
+
+        // If they have one, give it to them
+        if (userInvite) {
           return interaction.editReply({
-            content:
-              "❌ Failed to establish an invite stream. Check channel configuration.",
+            content: `🔗 **Your personal invite link (Created by you):**\n${userInvite.url}`,
           });
         }
 
-        // Return the clean URL directly to them ephemerally
-        return interaction.editReply({
-          content: `🔗 **Here is your personal invite link:**\n${userInvite.url}\n\n*This link is tied to your account profile for invite statistics.*`,
-        });
-      } catch (error) {
-        console.error("Invite Panel Button Error:", error);
+        // If they don't have one, tell them to make it so the other bot tracks them properly
         return interaction.editReply({
           content:
-            "❌ An internal API error occurred while generating your link. Verify bot permissions.",
+            "❌ **You haven't created a personal invite link yet!**\n\n" +
+            "To make sure your invites count under your name on the tracking bot, you need to create one manually:\n" +
+            "1. Click the invite button next to any text channel.\n" +
+            "2. Edit the link settings so it **Never Expires**.\n" +
+            "3. Generate the link, then come back and click this button anytime to copy it!",
+        });
+      } catch (error) {
+        console.error(error);
+        return interaction.editReply({
+          content: "❌ Error fetching invite data. Check bot permissions.",
         });
       }
     }
